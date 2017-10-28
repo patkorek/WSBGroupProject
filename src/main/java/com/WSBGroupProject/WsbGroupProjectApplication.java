@@ -17,10 +17,8 @@ public class WsbGroupProjectApplication {
 
 	@Bean
 	CommandLineRunner init(AccountRepository accountRepository) {
-		return (evt) -> Arrays.asList("admin,user,test".split(","))
-				.forEach(
-						a -> {
-							Account account = accountRepository.save(new Account(a, a));
-						});
+		return (evt) -> {
+				accountRepository.save(new Account("testzyrafy@gmail.com","NoRealPassword"));
+		};
 	}
 }

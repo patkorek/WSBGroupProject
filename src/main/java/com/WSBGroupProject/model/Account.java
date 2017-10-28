@@ -33,14 +33,13 @@ public class Account {
     private String street;
     private String houseNumber;
     
-    private Boolean isActivated = false;
-
-    public Account(String name, String password) { // init
-        this.username = name;
-        this.password = password;
-    }
+    private String companyName;
+    private String nip;
+    private String companyAddress;
     
-    public Account(Account a) { // rest controller
+    private Boolean isActivated = false;
+    
+    public Account(Account a) { // rest controller constructor
         this.id = a.getId();
         this.username = a.getUsername();
         this.password = a.getPassword();
@@ -52,14 +51,18 @@ public class Account {
         this.postCode = a.getPostCode();
         this.street = a.getPostCode();
         this.houseNumber = a.getHouseNumber();
+        this.companyName = a.getCompanyName();
+        this.nip = a.getNip();
+        this.companyAddress = a.getCompanyAddress();
     }
 
-    Account() { // jpa only
+    public Account() { // jpa constructor
     }
 
-//    public Set<Bookmark> getBookmarks() {
-//        return bookmarks;
-//    }
+    public Account(String username, String password) { // initialization constructor
+    	this.username = username;
+    	this.password = password;
+    }
 
     public Long getId() {
         return id;
@@ -67,6 +70,10 @@ public class Account {
 
     public String getPassword() {
         return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
     }
 
     public String getUsername() {
@@ -143,5 +150,29 @@ public class Account {
 
 	public void setIsActivated(Boolean isActivated) {
 		this.isActivated = isActivated;
+	}
+
+	public String getCompanyName() {
+		return companyName;
+	}
+
+	public String getNip() {
+		return nip;
+	}
+
+	public String getCompanyAddress() {
+		return companyAddress;
+	}
+
+	public void setCompanyName(String companyName) {
+		this.companyName = companyName;
+	}
+
+	public void setNip(String nip) {
+		this.nip = nip;
+	}
+
+	public void setCompanyAddress(String companyAddress) {
+		this.companyAddress = companyAddress;
 	}
 }
