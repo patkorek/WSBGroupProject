@@ -18,8 +18,8 @@ import org.springframework.stereotype.Service;
 @Service
 public class EmailService {
     
-    final static private String EMAIL_FROM = "testzyrafy@gmail.com";
-    final static private String PASSWORD = "zyrafyzszafy";
+    final static private String EMAIL_FROM = "noreply@markiet.pl";
+    final static private String PASSWORD = "4BABDF51";
     final static private String RESET_EMAIL = "Markiet - password reset";
     final static private String SIGNUP_EMAIL = "Welcome to Markiet";
     
@@ -30,7 +30,7 @@ public class EmailService {
         Properties props = new Properties();
         props.put("mail.smtp.auth", "true");
         props.put("mail.smtp.starttls.enable", "true");
-        props.put("mail.smtp.host", "smtp.gmail.com");
+        props.put("mail.smtp.host", "s55.linuxpl.com");
         props.put("mail.smtp.port", "587");
 
         Session session = Session.getDefaultInstance(props,
