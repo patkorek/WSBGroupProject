@@ -1,28 +1,23 @@
 package com.WSBGroupProject.model;
 
+import com.WSBGroupProject.dto.UserForm;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-import javax.persistence.OneToMany;
-import java.util.HashSet;
-import java.util.Set;
-
 
 @Entity
 public class Account {
 
-//    @OneToMany(mappedBy = "account")
-//    private Set<Bookmark> bookmarks = new HashSet<>();
-
     @Id
     @GeneratedValue
     private Long id;
+    private Integer type;
 
+    private String username;
 //    @JsonIgnore
     private String password;
-    private String username;
     
     private String firstName;
     private String lastName;
@@ -35,25 +30,27 @@ public class Account {
     
     private String companyName;
     private String nip;
-    private String companyAddress;
     
+//    @JsonIgnore
     private Boolean isActivated = false;
+//    @JsonIgnore
+    private String hashLink;
     
-    public Account(Account a) { // rest controller constructor
-        this.id = a.getId();
-        this.username = a.getUsername();
-        this.password = a.getPassword();
-        this.firstName = a.getFirstName();
-        this.lastName = a.getLastName();
-        this.phone = a.getPhone();
-        this.dateOfBirth = a.getDateOfBirth();
-        this.city = a.getCity();
-        this.postCode = a.getPostCode();
-        this.street = a.getPostCode();
-        this.houseNumber = a.getHouseNumber();
-        this.companyName = a.getCompanyName();
-        this.nip = a.getNip();
-        this.companyAddress = a.getCompanyAddress();
+    public Account(UserForm uf) { // rest controller constructor
+        this.id = uf.getId();
+        this.type = uf.getType();
+        this.username = uf.getUsername();
+        this.password = uf.getPassword();
+        this.firstName = uf.getFirstName();
+        this.lastName = uf.getLastName();
+        this.phone = uf.getPhone()!=null ? uf.getPhone().replaceAll("\\D", "") : null;
+        this.dateOfBirth = uf.getDateOfBirth();
+        this.city = uf.getCity();
+        this.postCode = uf.getPostCode();
+        this.street = uf.getStreet();
+        this.houseNumber = uf.getHouseNumber();
+        this.companyName = uf.getCompanyName();
+        this.nip = uf.getNip()!=null ? uf.getNip().replaceAll("\\D", "") : null;
     }
 
     public Account() { // jpa constructor
@@ -160,10 +157,6 @@ public class Account {
 		return nip;
 	}
 
-	public String getCompanyAddress() {
-		return companyAddress;
-	}
-
 	public void setCompanyName(String companyName) {
 		this.companyName = companyName;
 	}
@@ -172,7 +165,19 @@ public class Account {
 		this.nip = nip;
 	}
 
-	public void setCompanyAddress(String companyAddress) {
-		this.companyAddress = companyAddress;
+	public Integer getType() {
+		return type;
+	}
+
+	public void setType(Integer type) {
+		this.type = type;
+	}
+
+	public String getHashLink() {
+		return hashLink;
+	}
+
+	public void setHashLink(String hashLink) {
+		this.hashLink = hashLink;
 	}
 }

@@ -1,8 +1,11 @@
 package com.WSBGroupProject.controller;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.regex.Pattern;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,13 +15,16 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import com.WSBGroupProject.repository.AccountRepository;
 import com.WSBGroupProject.model.Account;
+import com.WSBGroupProject.dto.*;
 import com.WSBGroupProject.error.UserAlreadyExistsException;
 import com.WSBGroupProject.error.UserNotFoundException;
 import com.WSBGroupProject.constants.Constants;
 import com.WSBGroupProject.services.EmailService;
+import com.WSBGroupProject.services.StringService;
 
 @RestController
 @RequestMapping("/accounts")
@@ -27,128 +33,222 @@ public class AccountRestController {
 	AccountRepository accountRepository;
 	@Autowired
 	EmailService emailService;
+	@Autowired
+	StringService stringService;
 
 	@RequestMapping(method = RequestMethod.GET)
-	public Collection<Account> readAccounts() {
-		return accountRepository.findAll();
+	public ResponseDTO getAccounts() {
+		ResponseDTO response = new ResponseDTO("success",
+				new ArrayList<CodeDTO>(),
+				"",
+				accountRepository.findAll());
+		return response;
 	}
 
 	@RequestMapping(method = RequestMethod.POST)
-	public ResponseEntity<?> add(@RequestBody Account input) {
-		if (accountRepository.findByUsername(input.getUsername()).isPresent()) {
-			throw new UserAlreadyExistsException(input.getUsername());
+	public ResponseDTO postAccount(@RequestBody UserForm input) {
+		ResponseDTO response = new ResponseDTO(input);
+		Optional<Account> oldAccount = accountRepository.findByUsername(input.getUsername());
+		boolean signup = (input.getId() == null);
+		Account newAccount = new Account(input);
+
+		List<CodeDTO> errorCodes = verifyInput(newAccount);
+		
+		// adding new user or changing username to one of already existing usernames
+		if (oldAccount.isPresent() && (signup || newAccount.getId()!=oldAccount.get().getId())) {
+			errorCodes.add(new CodeDTO("username", "Użytkownik o tym adresie email już istnieje"));
 		}
 		
-		Map<String, String> errors = verifyInput(input); 
-		
-		if (!errors.isEmpty()) {
-			return new ResponseEntity<Map<String, String>>(errors, HttpStatus.OK);
+		if (!errorCodes.isEmpty()) {
+			response.setCode(errorCodes);
+			response.setStatus("error");			
+			return response;
 		}
+		
+		if (signup || newAccount.getPassword()!=null) {
+			newAccount.setPassword(stringService.hashPassword(newAccount.getPassword()));
+		}
+		
+		if (signup) {
+			newAccount.setHashLink(stringService.getLinkHash());
+			emailService.signUp(newAccount);
+		}
+		else {
+			newAccount.setHashLink(oldAccount.get().getHashLink());
+			newAccount.setIsActivated(oldAccount.get().getIsActivated());
+			if (newAccount.getType()==null) {
+				newAccount.setType(oldAccount.get().getType());
+			}
+		}
+		
+		accountRepository.save(newAccount);
 
-		Account result = accountRepository.save(new Account(input));
-		emailService.signUp(input.getUsername());
+		response.setStatus("success");
+		response.setCode(new ArrayList<CodeDTO>());
+		response.setResponse(newAccount);		
 
-		return new ResponseEntity<Account>(result, HttpStatus.OK);
+		return response;
 	}
 
 	@RequestMapping(method = RequestMethod.GET, value = "/{username:.+}")
-	public Account readAccount(@PathVariable String username) {
-		return accountRepository.findByUsername(username).orElseThrow(
-				() -> new UserNotFoundException(username));
+	public ResponseDTO readAccount(@PathVariable String username) {
+		Optional<Account> account = accountRepository.findByUsername(username);
+		Map<String,String> input = new HashMap<>();
+		input.put("username", username);
+		ResponseDTO response = new ResponseDTO(input);
+		List<CodeDTO> errorCodes = new ArrayList<>();
+		
+		if (account.isPresent()) {
+			response.setStatus("success");
+			response.setResponse(account.get());
+		}
+		else {
+			response.setStatus("error");
+			errorCodes.add(new CodeDTO("username","Użytkownik o tym adresie email nie istnieje"));
+		}
+		response.setCode(errorCodes);
+		return response;
 	}
 
 	@RequestMapping(method = RequestMethod.POST, value = "/login")
-	public ResponseEntity<?> login(@RequestBody Account input) {
-		Account account = accountRepository.findByUsername(input.getUsername())
-				.orElseThrow(() -> new UserNotFoundException(input.getUsername()));
+	public ResponseDTO login(@RequestBody LoginForm input) {
+		Optional<Account> account = accountRepository.findByUsername(input.getUsername());
+		ResponseDTO response = new ResponseDTO(input);
+		List<CodeDTO> errorCodes = new ArrayList<>();
 		
-		if (account.getPassword().equals(input.getPassword())) {
-			return new ResponseEntity<Account>(account, HttpStatus.OK);
+		if (!account.isPresent() || !stringService.checkPass(input.getPassword(), account.get().getPassword())) {
+			errorCodes.add(new CodeDTO("loginForm","Błędny użytkownik lub hasło"));
+			response.setStatus("error");
 		}
 		else {
-			Map<String, String> errorResponse = new HashMap<>();
-			errorResponse.put("message", "Bad credentials");
-			return new ResponseEntity<Map<String, String>>(errorResponse, HttpStatus.OK);
+			response.setStatus("success");
+			response.setResponse(account.get());
 		}
+		response.setCode(errorCodes);
+		
+		return response;
 	}
 
 	@RequestMapping(method = RequestMethod.GET, value = "/reset/{username:.+}")
-	public Boolean resetPassword(@PathVariable String username) {
-		Account account = accountRepository.findByUsername(username).orElseThrow(
-				() -> new UserNotFoundException(username));
-		account.setPassword(emailService.resetPassword(username));
-		accountRepository.save(account);
-		return Boolean.TRUE;
+	public ResponseDTO resetPassword(@PathVariable String username) {
+		Optional<Account> account = accountRepository.findByUsername(username);
+		Map<String,String> input = new HashMap<>();
+		input.put("username", username);
+		ResponseDTO response = new ResponseDTO(input);
+		List<CodeDTO> errorCodes = new ArrayList<>();
+		
+		if (account.isPresent()) {
+	    	String newPassword = stringService.getNewPassword();
+	    	emailService.resetPassword(account.get(),newPassword);
+			account.get().setPassword(stringService.hashPassword(newPassword));
+			accountRepository.save(account.get());
+			
+			response.setStatus("success");
+			response.setResponse(account.get());
+		}
+		else {
+			response.setStatus("error");
+			errorCodes.add(new CodeDTO("username","Użytkownik o tym adresie email nie istnieje"));
+		}
+		response.setCode(errorCodes);
+		return response;
 	}
 
-	private Map<String, String> verifyInput(Account input) {
-		Map<String, String> map = new HashMap<>();
-		if ( !Pattern.compile(Constants.EMAIL_PATTERN)
+	@RequestMapping(method = RequestMethod.GET, value = "/activate/{username:.+}")
+	public ResponseDTO activateAccount(@PathVariable String username, @RequestParam(value = "key") String key ) {
+		Optional<Account> account = accountRepository.findByUsername(username);
+		Map<String,String> input = new HashMap<>();
+		input.put("username", username);
+		input.put("key", key);
+		ResponseDTO response = new ResponseDTO(input);
+		List<CodeDTO> errorCodes = new ArrayList<>();
+		
+		if (account.isPresent() && account.get().getHashLink().equals(key)) {
+			account.get().setIsActivated(true);
+			accountRepository.save(account.get());
+			
+			response.setStatus("success");
+			response.setResponse(account.get());
+		}
+		else if (account.isPresent()) {
+			response.setStatus("error");
+			errorCodes.add(new CodeDTO("key","Błędny klucz aktywacyjny"));
+		}
+		else {
+			response.setStatus("error");
+			errorCodes.add(new CodeDTO("username","Użytkownik o tym adresie email nie istnieje"));
+		}
+		response.setCode(errorCodes);
+		return response;
+	}
+
+	private List<CodeDTO> verifyInput(Account input) {
+		List<CodeDTO> result = new ArrayList<>();
+		if (input.getUsername()!=null && !Pattern.compile(Constants.EMAIL_PATTERN)
 				.matcher(input.getUsername())
 				.matches() ) {
-			map.put("username","Email is not proper");
+			result.add(new CodeDTO("username","Email jest niepoprawny"));
 		}
-		if ( !Pattern.compile(Constants.PASSWORD_PATTERN)
+		if (input.getPassword()!=null && !Pattern.compile(Constants.PASSWORD_PATTERN)
 				.matcher(input.getPassword())
 				.matches() ) {
-			map.put("password","Password is not proper");
+			result.add(new CodeDTO("password","Haso musi zawierać co najmniej jedną małą literę, "
+					+ "jedną dużą literę, jedną cyfrę oraz jeden znak specjalny"));
 		}
-		if ( !Pattern.compile(Constants.FIRSTNAME_PATTERN)
+		if (input.getFirstName()!=null && !Pattern.compile(Constants.FIRSTNAME_PATTERN)
 				.matcher(input.getFirstName())
 				.matches() ) {
-			map.put("firstName","First name is not proper");
+			result.add(new CodeDTO("firstName","Imię musi składać się z co najmniej 3 liter"));
 		}
-		if ( !Pattern.compile(Constants.LASTNAME_PATTERN)
+		if (input.getLastName()!=null && !Pattern.compile(Constants.LASTNAME_PATTERN)
 				.matcher(input.getLastName())
 				.matches() ) {
-			map.put("lastName","Last name is not proper");
+			result.add(new CodeDTO("lastName","Nazwisko musi składać się z co najmniej 3 liter"));
 		}
-		if ( !Pattern.compile(Constants.PHONE_PATTERN)
+		if (input.getPhone()!=null && !Pattern.compile(Constants.PHONE_PATTERN)
 				.matcher(input.getPhone())
 				.matches() ) {
-			map.put("phone","Phone is not proper");
+			result.add(new CodeDTO("phone","Numer telefonu musi zawierać 9 cyfr"));
 		}
-		if ( !Pattern.compile(Constants.DATEOFBIRTH_PATTERN)
+		if (input.getDateOfBirth()!=null && !Pattern.compile(Constants.DATEOFBIRTH_PATTERN)
 				.matcher(input.getDateOfBirth())
 				.matches() ) {
-			map.put("dateOfBirth","Date of birth is not proper");
+			result.add(new CodeDTO("dateOfBirth","Podaj datę urodzenia w formacie rrrr-mm-dd"));
 		}
-		if ( !Pattern.compile(Constants.HOUSENUMBER_PATTERN)
+		if (input.getHouseNumber()!=null && !Pattern.compile(Constants.HOUSENUMBER_PATTERN)
 				.matcher(input.getHouseNumber())
 				.matches() ) {
-			map.put("houseNumber","House number is not proper");
+			result.add(new CodeDTO("houseNumber","Numer domu jest polem opcjonalnym, może zawierać cyfry, litery oraz ukośniki"));
 		}
-		if ( !Pattern.compile(Constants.CITY_PATTERN)
+		if (input.getCity()!=null && !Pattern.compile(Constants.CITY_PATTERN)
 				.matcher(input.getCity())
 				.matches() ) {
-			map.put("city","City is not proper");
+			result.add(new CodeDTO("city","Miasto musi się składać z co najmniej 3 liter"));
 		}
-		if ( !Pattern.compile(Constants.POSTCODE_PATTERN)
+		if (input.getPostCode()!=null && !Pattern.compile(Constants.POSTCODE_PATTERN)
 				.matcher(input.getPostCode())
 				.matches() ) {
-			map.put("postCode","Post code is not proper");
+			result.add(new CodeDTO("postCode","Podaj kod pocztowy w formacie xx-xxx"));
 		}
-		if ( !Pattern.compile(Constants.STREET_PATTERN)
+		if (input.getStreet()!=null && !Pattern.compile(Constants.STREET_PATTERN)
 				.matcher(input.getStreet())
 				.matches() ) {
-			map.put("street","Street is not proper");
+			result.add(new CodeDTO("street","Ulica musi sklładać się z co najmniej 3 znaków, poza literami dozwolone są spacja, apostrof, kropka, cudzysłów"));
 		}
-		if ( !Pattern.compile(Constants.COMPANYNAME_PATTERN)
+		if (input.getCompanyName()!=null && !Pattern.compile(Constants.COMPANYNAME_PATTERN)
 				.matcher(input.getCompanyName())
 				.matches() ) {
-			map.put("companyName","Company name is not proper");
+			result.add(new CodeDTO("companyName","Nazwa firmy musi składać się z co najmniej 3 znaków i nie zawierać średnika"));
 		}
-		if ( !Pattern.compile(Constants.COMPANYADDRESS_PATTERN)
-				.matcher(input.getCompanyAddress())
-				.matches() ) {
-			map.put("companyAddress","Company address is not proper");
-		}
-		if ( !Pattern.compile(Constants.NIP_PATTERN)
+		if (input.getNip()!=null && !Pattern.compile(Constants.NIP_PATTERN)
 				.matcher(input.getNip())
 				.matches() ) {
-			map.put("nip","NIP is not proper");
+			result.add(new CodeDTO("nip","NIP musi zawierać 10 cyfr"));
+		}
+		else if (input.getNip()!=null && !stringService.isNIPValid(input.getNip())) {
+			result.add(new CodeDTO("nip","Numer NIP jest niepoprawny"));
 		}
 		
-		return map;
+		return result;
 	}
 }

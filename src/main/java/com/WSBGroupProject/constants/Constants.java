@@ -5,16 +5,18 @@ public class Constants {
 			+ "[A-Za-z0-9-]+(\\.[A-Za-z0-9]+)*(\\.[A-Za-z]{2,})$";
 	public static final String FIRSTNAME_PATTERN = "^[A-Za-zĄąĆćĘęŁłŃńÓóŚśŹźŻż]{3,}$";
 	public static final String LASTNAME_PATTERN = "^[A-Za-zĄąĆćĘęŁłŃńÓóŚśŹźŻż]{3,}$";
-	public static final String STREET_PATTERN = "^[A-Za-zĄąĆćĘęŁłŃńÓóŚśŹźŻż]*$";
-	public static final String HOUSENUMBER_PATTERN = "^\\d{0,7}$";
+	public static final String STREET_PATTERN = "^[A-Za-zĄąĆćĘęŁłŃńÓóŚśŹźŻż '\"\\.]{3,}$";
+	public static final String HOUSENUMBER_PATTERN = "^[A-Za-z\\d\\/\\\\]{0,15}$";
 	public static final String POSTCODE_PATTERN = "^\\d{2}-\\d{3}$";
 	public static final String CITY_PATTERN = "^[A-Za-zĄąĆćĘęŁłŃńÓóŚśŹźŻż]{3,}$";
-	public static final String DATEOFBIRTH_PATTERN = "^\\d{2}/\\d{2}/\\d{4}$";
-	public static final String PHONE_PATTERN = "^\\d{9}|\\d{7}$";
+	public static final String DATEOFBIRTH_PATTERN = "^\\d{4}-\\d{2}-\\d{2}$";
+	public static final String PHONE_PATTERN = "^\\d{9}$";
 	public static final String PASSWORD_PATTERN = "^(?=\\S*[0-9])(?=\\S*[a-z])(?=\\S*[A-Z])"
 			+ "(?=\\S*[`~!@#$%^&*\\-_=+,<.>?;:'\"()\\[\\]{}\\|\\/\\\\])\\S{8,16}$";
-	public static final String COMPANYNAME_PATTERN = "^[A-Za-zĄąĆćĘęŁłŃńÓóŚśŹźŻż]{3,}$";
-	public static final String COMPANYADDRESS_PATTERN = "^[A-Za-zĄąĆćĘęŁłŃńÓóŚśŹźŻż\\d,\\-\\s]{3,}$";
-	public static final String NIP_PATTERN = "^((\\d{3}-\\d{3}-\\d{2}-\\d{2})|"
-			+ "(\\d{3}-\\d{2}-\\d{2}-\\d{3}))$";
+	public static final String COMPANYNAME_PATTERN = "^[^;]{3,}$";
+	public static final String NIP_PATTERN = "^\\d{10}$";
+	
+	public static final Integer TYPE_PRIVATE = 1;
+	public static final Integer TYPE_COMPANY = 2;
+	public static final Integer TYPE_ADMIN = 3;
 }
