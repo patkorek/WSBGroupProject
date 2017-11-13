@@ -15,10 +15,10 @@ public class WsbGroupProjectApplication {
 		SpringApplication.run(WsbGroupProjectApplication.class, args);
 	}
 
-	@Bean
-	CommandLineRunner init(AccountRepository accountRepository) {
-		return (evt) -> {
-				accountRepository.save(new Account("testzyrafy@gmail.com","NoRealPassword"));
-		};
-	}
+//	@Bean
+//	CommandLineRunner init(AccountRepository accountRepository) {
+//		return (evt) -> {
+//				accountRepository.save(new Account("admin","$2a$04$VLpomGY8baLyMZ5H54O85OcYh040.ykirmTkgwPmQcanIei.OjIL."));
+//		};
+//	}
 }

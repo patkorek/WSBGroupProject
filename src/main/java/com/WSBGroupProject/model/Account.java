@@ -39,7 +39,7 @@ public class Account {
     public Account(UserForm uf) { // rest controller constructor
         this.id = uf.getId();
         this.type = uf.getType();
-        this.username = uf.getUsername();
+        this.username = uf.getUsername()!=null ? uf.getUsername() : "";
         this.password = uf.getPassword();
         this.firstName = uf.getFirstName();
         this.lastName = uf.getLastName();

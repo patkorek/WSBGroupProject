@@ -6,7 +6,7 @@ public class Constants {
 	public static final String FIRSTNAME_PATTERN = "^[A-Za-zĄąĆćĘęŁłŃńÓóŚśŹźŻż]{3,}$";
 	public static final String LASTNAME_PATTERN = "^[A-Za-zĄąĆćĘęŁłŃńÓóŚśŹźŻż]{3,}$";
 	public static final String STREET_PATTERN = "^[A-Za-zĄąĆćĘęŁłŃńÓóŚśŹźŻż '\"\\.]{3,}$";
-	public static final String HOUSENUMBER_PATTERN = "^[A-Za-z\\d\\/\\\\]{0,15}$";
+	public static final String HOUSENUMBER_PATTERN = "^[A-Za-z\\d\\/\\\\]{1,15}$";
 	public static final String POSTCODE_PATTERN = "^\\d{2}-\\d{3}$";
 	public static final String CITY_PATTERN = "^[A-Za-zĄąĆćĘęŁłŃńÓóŚśŹźŻż]{3,}$";
 	public static final String DATEOFBIRTH_PATTERN = "^\\d{4}-\\d{2}-\\d{2}$";

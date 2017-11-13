@@ -48,11 +48,13 @@ public class AccountRestController {
 	@RequestMapping(method = RequestMethod.POST)
 	public ResponseDTO postAccount(@RequestBody UserForm input) {
 		ResponseDTO response = new ResponseDTO(input);
-		Optional<Account> oldAccount = accountRepository.findByUsername(input.getUsername());
 		boolean signup = (input.getId() == null);
 		Account newAccount = new Account(input);
+		Optional<Account> oldAccount = signup ? 
+				accountRepository.findByUsername(newAccount.getUsername()) :
+				accountRepository.findById(newAccount.getId());
 
-		List<CodeDTO> errorCodes = verifyInput(newAccount);
+		List<CodeDTO> errorCodes = verifyInput(newAccount,signup);
 		
 		// adding new user or changing username to one of already existing usernames
 		if (oldAccount.isPresent() && (signup || newAccount.getId()!=oldAccount.get().getId())) {
@@ -120,6 +122,10 @@ public class AccountRestController {
 			errorCodes.add(new CodeDTO("loginForm","Błędny użytkownik lub hasło"));
 			response.setStatus("error");
 		}
+		else if (!account.get().getIsActivated()) {
+			errorCodes.add(new CodeDTO("username","Konto nie zostało aktywowane"));
+			response.setStatus("error");
+		}
 		else {
 			response.setStatus("success");
 			response.setResponse(account.get());
@@ -182,9 +188,53 @@ public class AccountRestController {
 		return response;
 	}
 
-	private List<CodeDTO> verifyInput(Account input) {
+	private List<CodeDTO> verifyInput(Account input, boolean signup) {
 		List<CodeDTO> result = new ArrayList<>();
-		if (input.getUsername()!=null && !Pattern.compile(Constants.EMAIL_PATTERN)
+		//required fields verification on signup
+		if (signup) {
+			if ("".equals(input.getUsername())) {
+				result.add(new CodeDTO("username","Email jest polem wymaganym"));
+			}
+			if (input.getType()==null) {
+				result.add(new CodeDTO("type","Typ jest polem wymaganym"));
+			}
+			if (input.getPassword()==null) {
+				result.add(new CodeDTO("password","Haso jest polem wymaganym"));
+			}
+			if (input.getFirstName()==null) {
+				result.add(new CodeDTO("firstName","Imię jest polem wymaganym"));
+			}
+			if (input.getLastName()==null) {
+				result.add(new CodeDTO("lastName","Nazwisko jest polem wymaganym"));
+			}
+			if (input.getPhone()==null) {
+				result.add(new CodeDTO("phone","Numer telefonu jest polem wymaganym"));
+			}
+			if (input.getDateOfBirth()==null) {
+				result.add(new CodeDTO("dateOfBirth","Data urodzenia jest polem wymaganym"));
+			}
+			if (input.getCity()==null && input.getType()==Constants.TYPE_PRIVATE) {
+				result.add(new CodeDTO("city","Miasto jest polem wymaganym"));
+			}
+			if (input.getPostCode()==null && input.getType()==Constants.TYPE_PRIVATE) {
+				result.add(new CodeDTO("postCode","Kod pocztowy jest polem wymaganym"));
+			}
+			if (input.getStreet()==null && input.getType()==Constants.TYPE_PRIVATE) {
+				result.add(new CodeDTO("street","Ulica jest polem wymaganym"));
+			}
+			if (input.getHouseNumber()==null && input.getType()==Constants.TYPE_PRIVATE) {
+				result.add(new CodeDTO("houseNumber","Nr budynku jest polem wymaganym"));
+			}
+			if (input.getCompanyName()==null && input.getType()==Constants.TYPE_COMPANY) {
+				result.add(new CodeDTO("companyName","Nazwa firmy jest polem wymaganym"));
+			}
+			if (input.getNip()==null && input.getType()==Constants.TYPE_COMPANY) {
+				result.add(new CodeDTO("nip","NIP jest polem wymaganym"));
+			}
+		}
+		
+		//regex verification
+		if (input.getUsername()!=null && !"".equals(input.getUsername()) && !Pattern.compile(Constants.EMAIL_PATTERN)
 				.matcher(input.getUsername())
 				.matches() ) {
 			result.add(new CodeDTO("username","Email jest niepoprawny"));
@@ -218,7 +268,7 @@ public class AccountRestController {
 		if (input.getHouseNumber()!=null && !Pattern.compile(Constants.HOUSENUMBER_PATTERN)
 				.matcher(input.getHouseNumber())
 				.matches() ) {
-			result.add(new CodeDTO("houseNumber","Numer domu jest polem opcjonalnym, może zawierać cyfry, litery oraz ukośniki"));
+			result.add(new CodeDTO("houseNumber","Numer budynku może zawierać cyfry, litery oraz ukośniki"));
 		}
 		if (input.getCity()!=null && !Pattern.compile(Constants.CITY_PATTERN)
 				.matcher(input.getCity())

@@ -57,8 +57,8 @@ public class EmailService {
     }
     
     public void resetPassword(Account a, String newPassword){
-        String message = "Witaj " + a.getFirstName() + " " + a.getLastName() + ",\n"
-                + "Twoje nowe hasło to:\n"
+        String message = "Witaj,\n"
+                + "Oto hasło tymczasowe którego możesz użyć do zalogowania się w systemie Markiet.\n"
                 + newPassword + "\n\n"
                 + "Pozdrawiamy\n"
                 + "Zespół Markiet";
@@ -66,9 +66,9 @@ public class EmailService {
     }
     
     public void signUp(Account a){
-        String message = "Witaj " + a.getFirstName() + " " + a.getLastName() + ",\n"
-                + "Twoje konto zostało utworzone - aktywuj je klikając w poniższy link.\n"
-                + MARKIET_URL + "/activate?key=" + a.getHashLink() + "\n\n"
+        String message = "Witaj,\n"
+                + "Zarejestrowałeś się w systemie Markiet. W celu dokończenia rejestracji kliknij w link w tej wiadomości:\n"
+                + MARKIET_URL + "/activate.php?key=" + a.getHashLink() + "&username=" + a.getUsername() + "\n\n"
                 + "Pozdrawiamy\n"
                 + "Zespół Markiet";
         sendEmail(a.getUsername(), SIGNUP_EMAIL, message);
