@@ -55,7 +55,10 @@ public class AccountRestController {
 				accountRepository.findById(newAccount.getId());
 
 		List<CodeDTO> errorCodes = verifyInput(newAccount,signup);
-		
+
+		if (!signup && !oldAccount.isPresent()) {
+			errorCodes.add(new CodeDTO("id", "Nie ma takiego użytkownika"));
+		}
 		// adding new user or changing username to one of already existing usernames
 		if (oldAccount.isPresent() && (signup || newAccount.getId()!=oldAccount.get().getId())) {
 			errorCodes.add(new CodeDTO("username", "Użytkownik o tym adresie email już istnieje"));
@@ -76,11 +79,7 @@ public class AccountRestController {
 			emailService.signUp(newAccount);
 		}
 		else {
-			newAccount.setHashLink(oldAccount.get().getHashLink());
-			newAccount.setIsActivated(oldAccount.get().getIsActivated());
-			if (newAccount.getType()==null) {
-				newAccount.setType(oldAccount.get().getType());
-			}
+			mergeOldDataIntoNewAccount(newAccount, oldAccount.get());
 		}
 		
 		accountRepository.save(newAccount);
@@ -169,16 +168,22 @@ public class AccountRestController {
 		ResponseDTO response = new ResponseDTO(input);
 		List<CodeDTO> errorCodes = new ArrayList<>();
 		
-		if (account.isPresent() && account.get().getHashLink().equals(key)) {
-			account.get().setIsActivated(true);
-			accountRepository.save(account.get());
-			
-			response.setStatus("success");
-			response.setResponse(account.get());
-		}
-		else if (account.isPresent()) {
-			response.setStatus("error");
-			errorCodes.add(new CodeDTO("key","Błędny klucz aktywacyjny"));
+		if (account.isPresent()) {
+			if (account.get().getIsActivated()) {
+				response.setStatus("error");
+				errorCodes.add(new CodeDTO("username","Użytkownik jest już aktywowany"));
+			}
+			else if(account.get().getHashLink().equals(key)) {
+				account.get().setIsActivated(true);
+				accountRepository.save(account.get());
+				
+				response.setStatus("success");
+				response.setResponse(account.get());
+			}
+			else if (account.isPresent()) {
+				response.setStatus("error");
+				errorCodes.add(new CodeDTO("key","Błędny klucz aktywacyjny"));
+			}
 		}
 		else {
 			response.setStatus("error");
@@ -300,5 +305,50 @@ public class AccountRestController {
 		}
 		
 		return result;
+	}
+	
+	private void mergeOldDataIntoNewAccount(Account newAccount, Account oldAccount) {
+		newAccount.setHashLink(oldAccount.getHashLink());
+		newAccount.setIsActivated(oldAccount.getIsActivated());
+		
+		if (newAccount.getType()==null) {
+			newAccount.setType(oldAccount.getType());
+		}
+		if ("".equals(newAccount.getUsername())) {
+			newAccount.setUsername(oldAccount.getUsername());
+		}
+		if (newAccount.getPassword()==null) {
+			newAccount.setPassword(oldAccount.getPassword());
+		}
+		if (newAccount.getFirstName()==null) {
+			newAccount.setFirstName(oldAccount.getFirstName());
+		}
+		if (newAccount.getLastName()==null) {
+			newAccount.setLastName(oldAccount.getLastName());
+		}
+		if (newAccount.getPhone()==null) {
+			newAccount.setPhone(oldAccount.getPhone());
+		}
+		if (newAccount.getDateOfBirth()==null) {
+			newAccount.setDateOfBirth(oldAccount.getDateOfBirth());
+		}
+		if (newAccount.getCity()==null) {
+			newAccount.setCity(oldAccount.getCity());
+		}
+		if (newAccount.getPostCode()==null) {
+			newAccount.setPostCode(oldAccount.getPostCode());
+		}
+		if (newAccount.getStreet()==null) {
+			newAccount.setStreet(oldAccount.getStreet());
+		}
+		if (newAccount.getHouseNumber()==null) {
+			newAccount.setHouseNumber(oldAccount.getHouseNumber());
+		}
+		if (newAccount.getCompanyName()==null) {
+			newAccount.setCompanyName(oldAccount.getCompanyName());
+		}
+		if (newAccount.getNip()==null) {
+			newAccount.setNip(oldAccount.getNip());
+		}
 	}
 }
