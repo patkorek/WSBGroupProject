@@ -15,12 +15,10 @@ public class WsbGroupProjectApplication {
 		SpringApplication.run(WsbGroupProjectApplication.class, args);
 	}
 
-	@Bean
-	CommandLineRunner init(AccountRepository accountRepository) {
-		return (evt) -> Arrays.asList("admin,user,test".split(","))
-				.forEach(
-						a -> {
-							Account account = accountRepository.save(new Account(a, a));
-						});
-	}
+//	@Bean
+//	CommandLineRunner init(AccountRepository accountRepository) {
+//		return (evt) -> {
+//				accountRepository.save(new Account("admin","$2a$04$VLpomGY8baLyMZ5H54O85OcYh040.ykirmTkgwPmQcanIei.OjIL."));
+//		};
+//	}
 }
