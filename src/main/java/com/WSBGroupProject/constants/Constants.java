@@ -16,7 +16,17 @@ public class Constants {
 	public static final String COMPANYNAME_PATTERN = "^[^;]{3,}$";
 	public static final String NIP_PATTERN = "^\\d{10}$";
 	
+	public static final String FLOAT_PATTERN = "^\\d+(\\.\\d{1,2})?$";
+	
 	public static final Integer TYPE_PRIVATE = 1;
 	public static final Integer TYPE_COMPANY = 2;
 	public static final Integer TYPE_ADMIN = 3;
+
+	public static final Integer SERVICE_PROVIDER = 1;
+	public static final Integer SERVICE_RECIPIENT = 2;
+	
+	public static final Integer STATUS_AVAILABLE = 0;
+	public static final Integer STATUS_ORDERED = 1;
+	public static final Integer STATUS_DONE = 2;
+	public static final Integer STATUS_CANCELED = 3;
 }

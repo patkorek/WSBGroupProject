@@ -1,7 +1,6 @@
 package com.WSBGroupProject.controller;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -9,8 +8,6 @@ import java.util.Optional;
 import java.util.regex.Pattern;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -20,8 +17,6 @@ import org.springframework.web.bind.annotation.RestController;
 import com.WSBGroupProject.repository.AccountRepository;
 import com.WSBGroupProject.model.Account;
 import com.WSBGroupProject.dto.*;
-import com.WSBGroupProject.error.UserAlreadyExistsException;
-import com.WSBGroupProject.error.UserNotFoundException;
 import com.WSBGroupProject.constants.Constants;
 import com.WSBGroupProject.services.EmailService;
 import com.WSBGroupProject.services.StringService;
@@ -310,6 +305,8 @@ public class AccountRestController {
 	private void mergeOldDataIntoNewAccount(Account newAccount, Account oldAccount) {
 		newAccount.setHashLink(oldAccount.getHashLink());
 		newAccount.setIsActivated(oldAccount.getIsActivated());
+		newAccount.setProvidedServices(oldAccount.getProvidedServices());
+		newAccount.setRecievedServices(oldAccount.getRecievedServices());
 		
 		if (newAccount.getType()==null) {
 			newAccount.setType(oldAccount.getType());

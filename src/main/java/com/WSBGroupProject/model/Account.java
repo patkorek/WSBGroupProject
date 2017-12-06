@@ -3,9 +3,13 @@ package com.WSBGroupProject.model;
 import com.WSBGroupProject.dto.UserForm;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import java.util.List;
+
+import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.OneToMany;
 
 @Entity
 public class Account {
@@ -35,6 +39,12 @@ public class Account {
     private Boolean isActivated = false;
 //    @JsonIgnore
     private String hashLink;
+    @JsonIgnore
+    @OneToMany(mappedBy="provider", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Service> providedServices;
+    @JsonIgnore
+    @OneToMany(mappedBy="recipient", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Service> recievedServices;
     
     public Account(UserForm uf) { // rest controller constructor
         this.id = uf.getId();
@@ -183,5 +193,21 @@ public class Account {
 
 	public void setHashLink(String hashLink) {
 		this.hashLink = hashLink;
+	}
+
+	public List<Service> getProvidedServices() {
+		return providedServices;
+	}
+
+	public void setProvidedServices(List<Service> providedServices) {
+		this.providedServices = providedServices;
+	}
+
+	public List<Service> getRecievedServices() {
+		return recievedServices;
+	}
+
+	public void setRecievedServices(List<Service> recievedServices) {
+		this.recievedServices = recievedServices;
 	}
 }
