@@ -5,7 +5,6 @@
 
 	<groupId>com.wsb.group.project</groupId>
 	<artifactId>WSBGroupProject</artifactId>
-	<version>0.3</version>
 	<packaging>jar</packaging>
 
 	<name>WSBGroupProject</name>
@@ -73,6 +72,11 @@
             <version>1.4.7</version>
             <type>jar</type>
         </dependency>
+		<dependency>
+		    <groupId>org.apache.commons</groupId>
+		    <artifactId>commons-lang3</artifactId>
+		    <version>3.0</version>
+		</dependency>
 	</dependencies>
 
 	<build>
@@ -85,4 +89,5 @@
 	</build>
 
 
+	<version>1.0.2</version>
 </project>

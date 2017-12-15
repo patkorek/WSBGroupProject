@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import org.apache.commons.lang3.StringUtils;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -162,22 +163,31 @@ public class ServiceRestController {
 		List<Service> services = serviceRepository.findAll();
 		ResponseDTO response = new ResponseDTO(input);
 		List<CodeDTO> errorCodes = new ArrayList<>();
-		response.setCode(errorCodes);
 
 		List<Service> filteredServices = services.stream()
-				.filter(s -> {return (input.getCategory()==null || s.getCategory().contains(input.getCategory()))
-						&& (input.getName()==null || s.getName().contains(input.getName()))
-						&& (input.getAmount()==null || Float.parseFloat(s.getAmount())<Float.parseFloat(input.getAmount()))
-						&& (input.getStreet()==null || s.getStreet().contains(input.getStreet()))
-						&& (input.getHouseNumber()==null || s.getHouseNumber().contains(input.getHouseNumber()))
-						&& (input.getCity()==null || s.getCity().contains(input.getCity()))
+				.filter(s -> {return (input.getCategory()==null || StringUtils.containsIgnoreCase(s.getCategory(), input.getCategory()))
+						&& (input.getName()==null || StringUtils.containsIgnoreCase(s.getName(), input.getName()))
+						&& (input.getAmount()==null || Float.parseFloat(s.getAmount())<Float.parseFloat(input.getAmount().replace(",", ".").replaceAll("[^\\d\\.]", "")))
+						&& (input.getStreet()==null || StringUtils.containsIgnoreCase(s.getStreet(), input.getStreet()))
+						&& (input.getHouseNumber()==null || StringUtils.containsIgnoreCase(s.getHouseNumber(), input.getHouseNumber()))
+						&& (input.getCity()==null || StringUtils.containsIgnoreCase(s.getCity(), input.getCity()))
 						&& (input.getPostCode()==null || s.getPostCode().contains(input.getPostCode()))
 						&& (input.getDateTime()==null || s.getDateTime().contains(input.getDateTime()))
+						&& (input.getStatus()==null || s.getStatus().equals(input.getStatus()))
+						&& (input.getType()==null || s.getType().equals(input.getType()))
+						&& (input.getUserId()==null || (s.getProvider()!=null && s.getProvider().getId().equals(input.getUserId())) || (s.getRecipient()!=null && s.getRecipient().getId().equals(input.getUserId())))
 						;})
 				.collect(Collectors.toList());
 		
-		response.setStatus("success");
+		if (filteredServices.size() > 0) {
+			response.setStatus("success");
+		}
+		else {
+			response.setStatus("error");
+			errorCodes.add(new CodeDTO("result","Brak ofert spełniających podane kryteria"));
+		}
 		response.setResponse(filteredServices);
+		response.setCode(errorCodes);
 		
 		return response;
 	}

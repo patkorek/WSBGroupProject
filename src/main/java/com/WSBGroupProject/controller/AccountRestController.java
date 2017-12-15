@@ -1,6 +1,9 @@
 package com.WSBGroupProject.controller;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -264,6 +267,18 @@ public class AccountRestController {
 				.matcher(input.getDateOfBirth())
 				.matches() ) {
 			result.add(new CodeDTO("dateOfBirth","Podaj datę urodzenia w formacie rrrr-mm-dd"));
+		}
+		else if (input.getDateOfBirth()!=null) {
+			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+			try {
+				Date inputDate = sdf.parse(input.getDateOfBirth());
+				Date now = new Date();
+				if (now.before(inputDate)) {
+					result.add(new CodeDTO("dateOfBirth","Data urodzenia nie może być z przyszłości"));
+				}
+			} catch (ParseException e) {
+				e.printStackTrace();
+			}
 		}
 		if (input.getHouseNumber()!=null && !Pattern.compile(Constants.HOUSENUMBER_PATTERN)
 				.matcher(input.getHouseNumber())

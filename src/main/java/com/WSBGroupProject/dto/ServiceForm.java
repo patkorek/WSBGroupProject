@@ -4,7 +4,7 @@ public class ServiceForm {
 	
     private Long id;
     private Integer type;
-//    private Integer status;
+    private Integer status;
     private Long userId;
 
     private String category;
@@ -104,13 +104,13 @@ public class ServiceForm {
 		this.type = type;
 	}
 
-//	public Integer getStatus() {
-//		return status;
-//	}
-//
-//	public void setStatus(Integer status) {
-//		this.status = status;
-//	}
+	public Integer getStatus() {
+		return status;
+	}
+
+	public void setStatus(Integer status) {
+		this.status = status;
+	}
 	public Long getUserId() {
 		return userId;
 	}
